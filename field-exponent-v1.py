@@ -13,6 +13,7 @@ import base64
 import hashlib
 import json
 import pathlib
+import re
 import sys
 
 
@@ -28,6 +29,12 @@ MAX_INPUT_BYTES = 256 * 1024
 MAX_EVIDENCE_BYTES = 64 * 1024
 MAX_CHAIN_LENGTH = 512
 MAX_EXPONENT = 2**64 - 1
+PROVENANCE_REF_RE = re.compile(
+    r"^https://github\.com/[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}/"
+    r"(?:commit/[0-9a-f]{40}|pull/[1-9][0-9]{0,8})$"
+)
+MAX_PROVENANCE_REFS = 8
+MAX_PROVENANCE_REF_BYTES = 256
 
 
 class EvaluationError(ValueError):
@@ -210,6 +217,25 @@ def expected_evidence_refs(evidence_json):
     }
 
 
+def validate_evidence_refs(references, expected):
+    if not isinstance(references, list):
+        raise EvaluationError("binding evidence_refs do not match the reconstructed evidence")
+    if len(references) > len(expected) + MAX_PROVENANCE_REFS:
+        raise EvaluationError("binding evidence_refs exceed the provenance limit")
+    if any(
+        not isinstance(reference, str)
+        or len(reference.encode("utf-8")) > MAX_PROVENANCE_REF_BYTES
+        or any(character in reference for character in "\r\n\x00")
+        for reference in references
+    ):
+        raise EvaluationError("binding evidence_refs contain an invalid reference")
+    if len(set(references)) != len(references) or not expected.issubset(set(references)):
+        raise EvaluationError("binding evidence_refs do not match the reconstructed evidence")
+    extras = set(references) - expected
+    if any(PROVENANCE_REF_RE.fullmatch(reference) is None for reference in extras):
+        raise EvaluationError("binding evidence_refs contain an unsupported provenance reference")
+
+
 def evaluate(request):
     if request.get("protocol_version") != 1:
         raise EvaluationError("unsupported protocol version")
@@ -237,9 +263,7 @@ def evaluate(request):
     candidate = validate_candidate(parse_json(candidate_raw, "candidate"), config)
     pairs, result = replay_chain(config, candidate["chain"])
     evidence_json = evidence_for(request, config, candidate_ref, candidate, pairs, result)
-    references = binding.get("evidence_refs")
-    if not isinstance(references, list) or set(references) != expected_evidence_refs(evidence_json):
-        raise EvaluationError("binding evidence_refs do not match the reconstructed evidence")
+    validate_evidence_refs(binding.get("evidence_refs"), expected_evidence_refs(evidence_json))
     operation_count = len(candidate["chain"]) - 1
     baseline = baseline_value(task.get("baseline_ref"))
     evidence_digest = hashlib.sha256(evidence_json.encode("utf-8")).hexdigest()
