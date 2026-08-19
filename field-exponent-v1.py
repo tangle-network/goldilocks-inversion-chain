@@ -29,11 +29,10 @@ MAX_INPUT_BYTES = 256 * 1024
 MAX_EVIDENCE_BYTES = 64 * 1024
 MAX_CHAIN_LENGTH = 512
 MAX_EXPONENT = 2**64 - 1
-PROVENANCE_REF_RE = re.compile(
-    r"^https://github\.com/[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}/"
-    r"(?:commit/[0-9a-f]{40}|pull/[1-9][0-9]{0,8})$"
+PROVENANCE_REPOSITORY_RE = re.compile(
+    r"^https://github\.com/[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$"
 )
-MAX_PROVENANCE_REFS = 8
+PROVENANCE_COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 MAX_PROVENANCE_REF_BYTES = 256
 
 
@@ -103,11 +102,18 @@ def require_exact_keys(value, expected, label):
 
 
 def validate_config(config):
-    require_exact_keys(
-        config,
-        {"schema_version", "modulus", "base", "exponent", "metric", "max_chain_length"},
-        "task config",
-    )
+    config_keys = {
+        "schema_version",
+        "modulus",
+        "base",
+        "exponent",
+        "metric",
+        "max_chain_length",
+    }
+    if not isinstance(config, dict) or (
+        set(config) != config_keys and set(config) != config_keys | {"provenance"}
+    ):
+        raise EvaluationError("task config has invalid fields")
     if config["schema_version"] != 1:
         raise EvaluationError("unsupported task config schema_version")
     modulus = require_int(config["modulus"], "task config modulus", 3, MAX_EXPONENT)
@@ -122,7 +128,7 @@ def validate_config(config):
     max_chain_length = require_int(
         config["max_chain_length"], "task config max_chain_length", 2, MAX_CHAIN_LENGTH
     )
-    return {
+    normalized = {
         "schema_version": 1,
         "modulus": modulus,
         "base": base,
@@ -130,6 +136,17 @@ def validate_config(config):
         "metric": METRIC,
         "max_chain_length": max_chain_length,
     }
+    if "provenance" in config:
+        provenance = config["provenance"]
+        require_exact_keys(provenance, {"repository", "revision"}, "task config provenance")
+        repository = provenance.get("repository")
+        revision = provenance.get("revision")
+        if not isinstance(repository, str) or PROVENANCE_REPOSITORY_RE.fullmatch(repository) is None:
+            raise EvaluationError("task config provenance repository is invalid")
+        if not isinstance(revision, str) or PROVENANCE_COMMIT_RE.fullmatch(revision) is None:
+            raise EvaluationError("task config provenance revision is invalid")
+        normalized["provenance"] = {"repository": repository, "revision": revision}
+    return normalized
 
 
 def validate_candidate(candidate, config):
@@ -217,11 +234,9 @@ def expected_evidence_refs(evidence_json):
     }
 
 
-def validate_evidence_refs(references, expected):
+def validate_evidence_refs(references, expected, provenance):
     if not isinstance(references, list):
         raise EvaluationError("binding evidence_refs do not match the reconstructed evidence")
-    if len(references) > len(expected) + MAX_PROVENANCE_REFS:
-        raise EvaluationError("binding evidence_refs exceed the provenance limit")
     if any(
         not isinstance(reference, str)
         or len(reference.encode("utf-8")) > MAX_PROVENANCE_REF_BYTES
@@ -232,8 +247,36 @@ def validate_evidence_refs(references, expected):
     if len(set(references)) != len(references) or not expected.issubset(set(references)):
         raise EvaluationError("binding evidence_refs do not match the reconstructed evidence")
     extras = set(references) - expected
-    if any(PROVENANCE_REF_RE.fullmatch(reference) is None for reference in extras):
-        raise EvaluationError("binding evidence_refs contain an unsupported provenance reference")
+    if not extras:
+        return
+    if provenance is None:
+        raise EvaluationError("binding evidence_refs contain unsupported provenance")
+    repository = provenance["repository"]
+    task_commit = f"{repository}/commit/{provenance['revision']}"
+    commit_prefix = f"{repository}/commit/"
+    pull_prefix = f"{repository}/pull/"
+    commit_refs = [
+        reference
+        for reference in extras
+        if reference.startswith(commit_prefix)
+        and PROVENANCE_COMMIT_RE.fullmatch(reference[len(commit_prefix) :])
+    ]
+    submission_refs = [reference for reference in commit_refs if reference != task_commit]
+    pull_refs = [
+        reference
+        for reference in extras
+        if re.fullmatch(rf"{re.escape(pull_prefix)}[1-9][0-9]{{0,8}}", reference)
+    ]
+    if (
+        len(extras) != 3
+        or task_commit not in extras
+        or len(commit_refs) != 2
+        or len(submission_refs) != 1
+        or len(pull_refs) != 1
+    ):
+        raise EvaluationError(
+            "binding evidence_refs require the task commit, a submission commit, and a task pull request"
+        )
 
 
 def evaluate(request):
@@ -263,7 +306,11 @@ def evaluate(request):
     candidate = validate_candidate(parse_json(candidate_raw, "candidate"), config)
     pairs, result = replay_chain(config, candidate["chain"])
     evidence_json = evidence_for(request, config, candidate_ref, candidate, pairs, result)
-    validate_evidence_refs(binding.get("evidence_refs"), expected_evidence_refs(evidence_json))
+    validate_evidence_refs(
+        binding.get("evidence_refs"),
+        expected_evidence_refs(evidence_json),
+        config.get("provenance"),
+    )
     operation_count = len(candidate["chain"]) - 1
     baseline = baseline_value(task.get("baseline_ref"))
     evidence_digest = hashlib.sha256(evidence_json.encode("utf-8")).hexdigest()

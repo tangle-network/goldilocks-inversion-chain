@@ -4,7 +4,7 @@
   "display": {
     "name": "Optimize a Goldilocks field inversion chain",
     "category": "Proof Systems",
-    "summary": "Find a shorter exact addition chain for x^(p-2) in the Goldilocks field. The checker counts modular multiplications, not wall-clock time."
+    "summary": "Find an exact addition chain with at most 83 steps for x^(p-2) in the Goldilocks field. A chain below 83 steps takes the record. The checker counts modular multiplications, not wall-clock time."
   },
   "metric": {
     "name": "field_multiplications",
@@ -15,7 +15,7 @@
   },
   "experiment": {
     "title": "Goldilocks p-2 addition-chain search",
-    "summary": "A binary chain uses 125 multiplications. A deterministic width-4 chain uses 83 and produces the same field result. The 83-step result is a candidate record, not an optimality proof.",
+    "summary": "A binary chain uses 125 multiplications. A deterministic width-4 chain uses 83 and produces the same field result. The task accepts at most 83 steps, and a result below 83 takes the record. The 83-step result is not an optimality proof.",
     "ranAt": "2026-08-19T00:00:00Z",
     "method": "The checker replays every addition-chain step and compares the modular result with Python's exact pow reference.",
     "resultRef": "/research/field-exponent-v1/result/record.json",
