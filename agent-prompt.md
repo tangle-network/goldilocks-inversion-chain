@@ -34,5 +34,7 @@ python3 field-exponent-v1.py \
 The checker replays the chain modulo `p` and compares it with an exact reference.
 It rejects invalid chains, incorrect results, and altered evidence.
 
+If you include source provenance, use only the public repository commit or pull-request URL.
+
 The published 125-step binary chain is the baseline.
 The published 83-step chain is a measured candidate, not a proof of optimality.
