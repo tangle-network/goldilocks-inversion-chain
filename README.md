@@ -25,7 +25,7 @@ python3 field-exponent-v1.py \
   --baseline 125
 ```
 
+The task accepts an exact chain with at most 83 steps.
+A chain below 83 steps takes the record.
 The published 83-step result reduces the binary baseline by 42 multiplications.
 It is a measured candidate, not a proof of optimality.
-
-If you include source provenance, use only the public repository commit or pull-request URL.

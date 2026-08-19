@@ -1,6 +1,7 @@
 # Goldilocks field inversion chain
 
-Find an exact addition chain shorter than the published 83-step candidate.
+Find an exact addition chain with at most 83 steps.
+A chain below 83 steps takes the record.
 
 Use the fixed task configuration:
 
@@ -34,7 +35,6 @@ python3 field-exponent-v1.py \
 The checker replays the chain modulo `p` and compares it with an exact reference.
 It rejects invalid chains, incorrect results, and altered evidence.
 
-If you include source provenance, use only the public repository commit or pull-request URL.
-
 The published 125-step binary chain is the baseline.
-The published 83-step chain is a measured candidate, not a proof of optimality.
+The published 83-step chain is accepted as the current record.
+It is a measured candidate, not a proof of optimality.
