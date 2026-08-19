@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "kind": "verifiable-task-manifest",
+  "display": {
+    "name": "Optimize a Goldilocks field inversion chain",
+    "category": "Proof Systems",
+    "summary": "Find a shorter exact addition chain for x^(p-2) in the Goldilocks field. The checker counts modular multiplications, not wall-clock time."
+  },
+  "metric": {
+    "name": "field_multiplications",
+    "unit": "field multiplications",
+    "direction": "lower",
+    "baseline": 125,
+    "target": 83
+  },
+  "experiment": {
+    "title": "Goldilocks p-2 addition-chain search",
+    "summary": "A binary chain uses 125 multiplications. A deterministic width-4 chain uses 83 and produces the same field result. The 83-step result is a candidate record, not an optimality proof.",
+    "ranAt": "2026-08-19T00:00:00Z",
+    "method": "The checker replays every addition-chain step and compares the modular result with Python's exact pow reference.",
+    "resultRef": "/research/field-exponent-v1/result/record.json",
+    "sourceRef": "/research/field-exponent-v1/provenance.json",
+    "stats": [
+      {
+        "label": "Binary baseline",
+        "value": "125 multiplications"
+      },
+      {
+        "label": "Width-4 candidate",
+        "value": "83 multiplications"
+      },
+      {
+        "label": "Exact reduction",
+        "value": "42 multiplications"
+      },
+      {
+        "label": "Optimality",
+        "value": "Not proved"
+      }
+    ]
+  },
+  "participation": {
+    "taskRef": "/research/field-exponent-v1/task-spec.json",
+    "files": [
+      {
+        "name": "task.json",
+        "ref": "/research/field-exponent-v1/task-spec.json"
+      },
+      {
+        "name": "task-config.json",
+        "ref": "/research/field-exponent-v1/task-config.json"
+      },
+      {
+        "name": "field-exponent-v1.py",
+        "ref": "/research/checkers/field-exponent-v1.py"
+      },
+      {
+        "name": "candidate.json",
+        "ref": "/research/field-exponent-v1/starter/candidate.json"
+      },
+      {
+        "name": "agent-prompt.md",
+        "ref": "/research/field-exponent-v1/agent-prompt.md"
+      }
+    ],
+    "check": {
+      "command": "python3",
+      "args": [
+        "field-exponent-v1.py",
+        "--check",
+        "candidate.json",
+        "--config",
+        "task-config.json",
+        "--baseline",
+        "125"
+      ]
+    }
+  },
+  "artifacts": {
+    "baselineCandidate": "/research/field-exponent-v1/baseline/candidate.json",
+    "currentCandidate": "/research/field-exponent-v1/result/candidate.json",
+    "currentResult": "/research/field-exponent-v1/result/record.json",
+    "taskConfig": "/research/field-exponent-v1/task-config.json",
+    "provenance": "/research/field-exponent-v1/provenance.json"
+  },
+  "task": {
+    "version": 1,
+    "adapterRef": "task:field-exponent-v1",
+    "configRef": "field-exponent:task:eyJiYXNlIjo3LCJleHBvbmVudCI6MTg0NDY3NDQwNjk0MTQ1ODQzMTksIm1heF9jaGFpbl9sZW5ndGgiOjI1NiwibWV0cmljIjoiZmllbGRfbXVsdGlwbGljYXRpb25zIiwibW9kdWx1cyI6MTg0NDY3NDQwNjk0MTQ1ODQzMjEsInNjaGVtYV92ZXJzaW9uIjoxfQ",
+    "executionPolicyRef": "policy:field-exponent-v1",
+    "baselineRef": "field-exponent:baseline:125",
+    "evaluatorRef": "evaluator:field-exponent-v1",
+    "acceptance": {
+      "requirements": [
+        {
+          "metric": "field_multiplications",
+          "maxValue": 83,
+          "minBaselineDelta": 42,
+          "minSampleCount": 1,
+          "maxUncertainty": 0
+        }
+      ]
+    },
+    "ranking": {
+      "metric": "field_multiplications"
+    },
+    "funding": {
+      "adapterRef": "funding:terminal",
+      "configRef": "funding-config:terminal-v1"
+    }
+  }
+}

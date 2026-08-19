@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "modulus": 18446744069414584321,
+  "base": 7,
+  "exponent": 18446744069414584319,
+  "metric": "field_multiplications",
+  "max_chain_length": 256
+}
