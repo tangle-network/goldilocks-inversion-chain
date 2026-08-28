@@ -4,19 +4,19 @@
   "display": {
     "name": "Optimize a Goldilocks field inversion chain",
     "category": "Proof Systems",
-    "summary": "Find an exact addition chain with at most 83 steps for x^(p-2) in the Goldilocks field. A chain below 83 steps takes the record. The checker counts modular multiplications, not wall-clock time."
+    "summary": "Find an exact addition chain with at most 72 steps for x^(p-2) in the Goldilocks field. A chain below 72 steps takes the record. The checker counts modular multiplications, not wall-clock time."
   },
   "metric": {
     "name": "field_multiplications",
     "unit": "field multiplications",
     "direction": "lower",
     "baseline": 125,
-    "target": 83
+    "target": 72
   },
   "experiment": {
     "title": "Goldilocks p-2 addition-chain search",
-    "summary": "A binary chain uses 125 multiplications. A deterministic width-4 chain uses 83 and produces the same field result. The task accepts at most 83 steps, and a result below 83 takes the record. The 83-step result is not an optimality proof.",
-    "ranAt": "2026-08-19T00:00:00Z",
+    "summary": "A binary chain uses 125 multiplications. A deterministic block-ladder chain uses 72 and produces the same field result. The task accepts at most 72 steps, and a result below 72 takes the record. The 72-step result is not an optimality proof, because the Schoenhage lower bound for this exponent is approximately 68 steps.",
+    "ranAt": "2026-08-28T00:00:00Z",
     "method": "The checker replays every addition-chain step and compares the modular result with Python's exact pow reference.",
     "resultRef": "/research/field-exponent-v1/result/record.json",
     "sourceRef": "/research/field-exponent-v1/provenance.json",
@@ -26,12 +26,16 @@
         "value": "125 multiplications"
       },
       {
-        "label": "Width-4 candidate",
-        "value": "83 multiplications"
+        "label": "Block-ladder candidate",
+        "value": "72 multiplications"
       },
       {
         "label": "Exact reduction",
-        "value": "42 multiplications"
+        "value": "53 multiplications"
+      },
+      {
+        "label": "Schoenhage lower bound",
+        "value": "Approximately 68 multiplications"
       },
       {
         "label": "Optimality",
@@ -94,8 +98,8 @@
       "requirements": [
         {
           "metric": "field_multiplications",
-          "maxValue": 83,
-          "minBaselineDelta": 42,
+          "maxValue": 72,
+          "minBaselineDelta": 53,
           "minSampleCount": 1,
           "maxUncertainty": 0
         }
