@@ -13,7 +13,7 @@ The repository contains a real starter layout:
 - `candidate.json` is the participant starter at the generic manifest path.
 - `starter/candidate.json` preserves the published 125-step binary baseline.
 - `baseline/candidate.json` records that same baseline.
-- `result/candidate.json` records an 83-step width-4 candidate.
+- `result/candidate.json` records the 72-step block-ladder candidate.
 - `field-exponent-v1.py` performs the exact check.
 - `agent-prompt.md` contains the participant instructions.
 
@@ -36,7 +36,18 @@ The canonical config bytes used by `task.configRef` are:
 
 Their SHA-256 is `74214de0c60a05d38131de0e0fd9044234be204123a3bfc42788340000fdec99`.
 
-The task accepts an exact chain with at most 83 steps.
-A chain below 83 steps takes the record.
-The published 83-step result reduces the binary baseline by 42 multiplications.
+The task accepts an exact chain with at most 72 steps.
+A chain below 72 steps takes the record.
+The published 72-step result reduces the binary baseline by 53 multiplications.
 It is a measured candidate, not a proof of optimality.
+The Schoenhage lower bound for this exponent is approximately 68 steps.
+Four steps of headroom remain between the record and that bound.
+
+## How the 72-step chain is built
+
+Write `u_k` for the value `2^k - 1`.
+The exponent obeys the identity `p - 2 = u_31 * 2^33 + u_32`.
+The chain builds `u_31` with the block rule `u_(a+b) = u_a * 2^b + u_b`.
+The block sequence is `u_2`, `u_3`, `u_6`, `u_12`, `u_24`, `u_30`, `u_31`, and it costs 37 steps.
+The chain then doubles `u_31` once, adds `1` to get `u_32`, doubles 32 more times, and adds `u_32`.
+The tail costs 35 steps, so the chain costs 72 steps.

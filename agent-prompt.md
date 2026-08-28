@@ -1,7 +1,7 @@
 # Goldilocks field inversion chain
 
-Find an exact addition chain with at most 83 steps.
-A chain below 83 steps takes the record.
+Find an exact addition chain with at most 72 steps.
+A chain below 72 steps takes the record.
 
 Use the fixed task configuration:
 
@@ -36,5 +36,6 @@ The checker replays the chain modulo `p` and compares it with an exact reference
 It rejects invalid chains, incorrect results, and altered evidence.
 
 The published 125-step binary chain is the baseline.
-The published 83-step chain is accepted as the current record.
+The published 72-step chain is accepted as the current record.
 It is a measured candidate, not a proof of optimality.
+The Schoenhage lower bound for this exponent is approximately 68 steps.
